@@ -5,6 +5,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -72,6 +73,9 @@ public class DiariesController {
                 "Accident"
         ));
 
+        TypeEvent.setButtonCell(centeredListCell());
+        TypeEvent.setCellFactory(listView -> centeredListCell());
+
         BeginHour.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 23, 0));
         BeginMinute.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 59, 0));
         EndHour.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 23, 0));
@@ -80,11 +84,25 @@ public class DiariesController {
         BeginMinute.setEditable(true);
         EndHour.setEditable(true);
         EndMinute.setEditable(true);
+        BeginHour.getEditor().setAlignment(Pos.CENTER);
+        BeginMinute.getEditor().setAlignment(Pos.CENTER);
+        EndHour.getEditor().setAlignment(Pos.CENTER);
+        EndMinute.getEditor().setAlignment(Pos.CENTER);
+        BeginDate.setEditable(true);
+        EndDate.setEditable(true);
+        BeginDate.getEditor().setAlignment(Pos.CENTER);
+        EndDate.getEditor().setAlignment(Pos.CENTER);
+        NameEvent.setAlignment(Pos.CENTER);
+        ContentEvent.setStyle("-fx-text-alignment: center;");
 
         type.setCellValueFactory(new PropertyValueFactory<>("type"));
         title.setCellValueFactory(new PropertyValueFactory<>("title"));
         begin.setCellValueFactory(new PropertyValueFactory<>("begin"));
         end.setCellValueFactory(new PropertyValueFactory<>("end"));
+        type.setStyle("-fx-alignment: CENTER;");
+        title.setStyle("-fx-alignment: CENTER;");
+        begin.setStyle("-fx-alignment: CENTER;");
+        end.setStyle("-fx-alignment: CENTER;");
 
         diary.setItems(entries);
 
@@ -189,6 +207,17 @@ public class DiariesController {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    private static ListCell<String> centeredListCell() {
+        return new ListCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item);
+                setAlignment(Pos.CENTER);
+            }
+        };
     }
 
     private static String formatTimestamp(Timestamp ts) {

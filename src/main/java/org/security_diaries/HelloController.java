@@ -33,6 +33,7 @@ public class HelloController {
 
                 stage.setScene(new Scene(diaries));
                 stage.setTitle("Journal de sécurité");
+                stage.sizeToScene();
                 stage.show();
 
             } catch (IOException e){
