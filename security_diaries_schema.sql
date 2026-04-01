@@ -1,0 +1,29 @@
+CREATE DATABASE IF NOT EXISTS security
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_0900_ai_ci;
+
+USE security;
+
+CREATE TABLE IF NOT EXISTS users (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  username VARCHAR(100) NOT NULL,
+  first_name VARCHAR(100) NOT NULL,
+  last_name VARCHAR(100) NOT NULL,
+  pwd VARCHAR(255) NOT NULL,
+  is_admin TINYINT(1) NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_users_username (username)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS diaries (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  title VARCHAR(255) NOT NULL,
+  type VARCHAR(100) NOT NULL,
+  content TEXT NOT NULL,
+  created_date DATETIME NOT NULL,
+  finished_date DATETIME NULL,
+  PRIMARY KEY (id),
+  KEY idx_diaries_created_date (created_date)
+) ENGINE=InnoDB;
+
