@@ -2,6 +2,8 @@ package org.security_diaries;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -27,6 +29,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 
 public class DiariesController {
@@ -61,7 +64,14 @@ public class DiariesController {
     @FXML
     private TableColumn<DiaryEntry, String> end;
 
+    @FXML
+    private ComboBox<String> JournalFilterType;
+    @FXML
+    private ComboBox<String> JournalSort;
+
     private ObservableList<DiaryEntry> entries = FXCollections.observableArrayList();
+    private final FilteredList<DiaryEntry> filteredEntries = new FilteredList<>(entries, entry -> true);
+    private final SortedList<DiaryEntry> sortedEntries = new SortedList<>(filteredEntries);
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
@@ -75,6 +85,26 @@ public class DiariesController {
 
         TypeEvent.setButtonCell(centeredListCell());
         TypeEvent.setCellFactory(listView -> centeredListCell());
+
+        JournalFilterType.setItems(FXCollections.observableArrayList(
+                "Tous",
+                "Intrusion",
+                "Levé de doute",
+                "Incendie",
+                "Accident"
+        ));
+        JournalFilterType.setValue("Tous");
+        JournalFilterType.setButtonCell(centeredListCell());
+        JournalFilterType.setCellFactory(listView -> centeredListCell());
+
+        JournalSort.setItems(FXCollections.observableArrayList(
+                "Chronologique (récent → ancien)",
+                "Chronologique (ancien → récent)",
+                "Type (A → Z)"
+        ));
+        JournalSort.setValue("Chronologique (récent → ancien)");
+        JournalSort.setButtonCell(centeredListCell());
+        JournalSort.setCellFactory(listView -> centeredListCell());
 
         BeginHour.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 23, 0));
         BeginMinute.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 59, 0));
@@ -104,7 +134,10 @@ public class DiariesController {
         begin.setStyle("-fx-alignment: CENTER;");
         end.setStyle("-fx-alignment: CENTER;");
 
-        diary.setItems(entries);
+        diary.setItems(sortedEntries);
+        applyJournalFilterAndSort();
+        JournalFilterType.valueProperty().addListener((obs, oldVal, newVal) -> applyJournalFilterAndSort());
+        JournalSort.valueProperty().addListener((obs, oldVal, newVal) -> applyJournalFilterAndSort());
 
         reloadEntries();
     }
@@ -183,7 +216,6 @@ public class DiariesController {
 
     private void reloadEntries() {
         entries.clear();
-        diary.setItems(entries);
 
         ResultSet rs = DiaryManager.getEntriesOfSevenDays();
         try {
@@ -206,6 +238,46 @@ public class DiariesController {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void applyJournalFilterAndSort() {
+        String selectedType = JournalFilterType == null ? null : JournalFilterType.getValue();
+        filteredEntries.setPredicate(entry -> {
+            if (entry == null) {
+                return false;
+            }
+            if (selectedType == null || selectedType.isBlank() || "Tous".equals(selectedType)) {
+                return true;
+            }
+            return selectedType.equals(entry.getType());
+        });
+
+        String sortMode = JournalSort == null ? null : JournalSort.getValue();
+        Comparator<DiaryEntry> comparator;
+        if ("Chronologique (ancien → récent)".equals(sortMode)) {
+            comparator = Comparator.comparing(DiariesController::parseBeginDateTime);
+        } else if ("Type (A → Z)".equals(sortMode)) {
+            comparator = Comparator.comparing(DiaryEntry::getType, String.CASE_INSENSITIVE_ORDER)
+                    .thenComparing(DiariesController::parseBeginDateTime, Comparator.reverseOrder());
+        } else {
+            comparator = Comparator.comparing(DiariesController::parseBeginDateTime, Comparator.reverseOrder());
+        }
+        sortedEntries.setComparator(comparator);
+    }
+
+    private static LocalDateTime parseBeginDateTime(DiaryEntry entry) {
+        if (entry == null) {
+            return LocalDateTime.MIN;
+        }
+        String begin = entry.getBegin();
+        if (begin == null || begin.isBlank()) {
+            return LocalDateTime.MIN;
+        }
+        try {
+            return LocalDateTime.parse(begin, DATE_TIME_FORMATTER);
+        } catch (RuntimeException ex) {
+            return LocalDateTime.MIN;
         }
     }
 

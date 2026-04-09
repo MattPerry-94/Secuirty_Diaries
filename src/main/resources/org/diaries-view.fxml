@@ -26,11 +26,16 @@
             <content>
                 <BorderPane prefHeight="371.0" prefWidth="600.0">
                     <top>
-                        <HBox alignment="CENTER_RIGHT" spacing="8.0">
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
                             <padding>
                                 <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
                             </padding>
                             <children>
+                                <Label text="Filtrer :" />
+                                <ComboBox fx:id="JournalFilterType" prefWidth="150.0" promptText="Tous" />
+                                <Label text="Trier :" />
+                                <ComboBox fx:id="JournalSort" prefWidth="220.0" />
+                                <Pane HBox.hgrow="ALWAYS" />
                                 <Button mnemonicParsing="false" onAction="#logout" text="Déconnexion" />
                             </children>
                         </HBox>
